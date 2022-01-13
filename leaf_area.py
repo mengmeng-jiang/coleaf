@@ -59,11 +59,11 @@ def measure_object(image, img_name, output_handle):
 
 def main(args):
     image, image_name = args
-    src = cv.imread(image)
     img_name = image_name
     txt = image_name + ".txt"
     
     print("--------")
+    src = cv.imread(image)
     closing = image_thresholding(src)
     with open(txt, "w")as f1:
         print("#leaf\tcontourArea\tcontourPerimeter\trectangleRate\tcenter", file=f1)
@@ -71,7 +71,7 @@ def main(args):
 
 if __name__=="__main__":
     if len(sys.argv) < 3:
-        print('usage: python leaf_eara.py <image> <image_name>')
+        print('usage: python leaf_area.py <image> <image_name>')
         sys.exit()
     
     main(sys.argv[1:])

@@ -1,10 +1,10 @@
-# TeaImaging
+# coleaf: Leaf phenotype investigation
 
 author | Mengwei Jiang  
 Email | mengmengjiang.1105@gmail.com
 
 ## Instruction
-Tealmaging is a tool to collect some traits of tea leaves. Such as the leaf area, leaf aspect ratio, leaf shape，trichome number.
+coleaf is a tool to collect some traits of tea leaves. Such as the leaf area, leaf aspect ratio, leaf shape，trichome number.
 to be continue (2022.3.6)
 
 ## Dependenies
@@ -14,7 +14,7 @@ to be continue (2022.3.6)
 - plantcv  
 ## Install
 ```
-git clone https://github.com/mengmeng-jiang/TeaImaging.git
+git clone https://github.com/mengmeng-jiang/coleaf.git
 cd TeaImaging
 ```
 ## Usage

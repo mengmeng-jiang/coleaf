@@ -1,0 +1,6 @@
+click
+opencv == 3.4.3
+numpy
+plantcv
+imutils
+

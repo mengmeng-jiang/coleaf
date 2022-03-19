@@ -50,7 +50,7 @@ def edge_crop(image):
             #print(approx)
             hull = cv.convexHull(approx)                              # 默认返回坐标点
             #print(hull)
-            hull_img = cv.polylines(image, [hull], True, (0, 255, 0), 2)
+            #hull_img = cv.polylines(image, [hull], True, (0, 255, 0), 2)
             #cv.imwrite('hull_img.jpg', hull_img)
             if len(hull) == 4:
                 dst = four_point_transform(image, hull.reshape(4,2))    # 矫正变换
@@ -67,25 +67,26 @@ def edge_crop(image):
 def main(image_path, crop = False, reflections = False, outdir=None):
     image = cv.imread(image_path)
     print("----------")
-    tip = "raw"
+    tip = "_i"
     if crop is True:
         image = edge_crop(image)
-        tip = "crop"
+        tip = "_c"
     if reflections is True:
         image = remove_reflections(image)
-        tip = "ref"
+        tip = "_r"
 
     if crop is True and reflections is True:
-        tip = "pre"
+        tip = "_p"
+    #if imgname is None:
     imgname = op.basename(image_path)
     name = op.splitext(imgname)[0]
     if outdir is None:
         outpath = op.dirname(image_path)
     else:
         outpath = outdir
-    outname = op.join(outpath, tip + name + ".jpg")
+    outname = op.join(outpath, name + tip + ".jpg")
 
     cv.imwrite(outname, image)
 
-if __name__ == "__main__":
-    main(sys.argv[1], True, True)
+# if __name__ == "__main__":
+#     main(sys.argv[1], True, True)

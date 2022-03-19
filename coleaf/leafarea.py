@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from unicodedata import name
+from webbrowser import BackgroundBrowser
 import cv2 as cv
 from imutils.perspective import four_point_transform
 import numpy as np
@@ -7,10 +9,10 @@ import imutils
 import sys
 import os.path as op
 
-#count the leaf erea
-def edge_demo(image,img_name,output_txt):
-    hig,len,channel=image.shape 
-    if hig < 1000:
+#Calculate the leaf erea
+def calc_area(image, background, name, outimg_path, f1):
+    height2, length2, channel=image.shape 
+    if height2 < 1000:
         brurred = cv.GaussianBlur(image, (5, 5), 0)
     else:
         brurred = cv.GaussianBlur(image, (7, 7), 0)
@@ -30,23 +32,24 @@ def edge_demo(image,img_name,output_txt):
     i = 0
     for contour in contours:   
         area = cv.contourArea(contour)
-        if area >= int(0.001*hig*len):
+        if area >= int(0.001*height2*length2) and area < int(0.9*height2*length2):
             i+=1
             print(i)
+            realarea = area/(height2*length2)*background
             perimeter = cv.arcLength(contour, True)
             x1, y1, w1, h1 = cv.boundingRect(contour)
-            cv.rectangle(image, (x1, y1), (x1+w1, y1+h1), (0, 0, 255), 2)
+            cv.rectangle(contour_img, (x1, y1), (x1+w1, y1+h1), (0, 0, 255), 2)
             M = cv.moments(contour)
             cx = int(M['m10']/M['m00'])
             cy = int(M['m01']/M['m00'])
             center = (cx,cy)
-            cv.circle(image,center, 5, (0, 255, 255), -1)
+            cv.circle(contour_img,center, 5, (0, 255, 255), -1)
             rate = round(max(w1,h1)/min(w1,h1), 1)
 
             (leftx,lefty) = tuple(contour[contour[:,:,0].argmin()][0])
-            cv.circle(image,(leftx,lefty), 5, (125, 255, 255), -1)
+            cv.circle(contour_img,(leftx,lefty), 5, (125, 255, 255), -1)
             (rightx,righty) = tuple(contour[contour[:,:,0].argmax()][0])
-            cv.circle(image,(rightx,righty), 5, (125, 255, 255), -1)
+            cv.circle(contour_img,(rightx,righty), 5, (125, 255, 255), -1)
             (topx,topy) = tuple(contour[contour[:,:,1].argmin()][0])
             (bottox,bottoy) = tuple(contour[contour[:,:,1].argmax()][0])            
             len1 = int(bottoy) - int(topy) 
@@ -70,7 +73,7 @@ def edge_demo(image,img_name,output_txt):
             rect = cv.minAreaRect(contour)
             box = cv.cv.BoxPoints() if imutils.is_cv2()else cv.boxPoints(rect)
             box = np.int0(box)
-            cv.drawContours(image, [box], 0, (242,175,54), 2)
+            cv.drawContours(contour_img, [box], 0, (242,175,54), 2)
             #print(i,h1,h2,hig)
             x2,y2=(box[0])
             if i <= 9: 
@@ -80,22 +83,37 @@ def edge_demo(image,img_name,output_txt):
             text_x = np.int(x2)
             text_y = np.int(y2+30)
             location = (text_x,text_y)
-            cv.putText(image, text_i, location, cv.FONT_HERSHEY_COMPLEX, 1.0, (0,0,0),3)
-            print("%s\t%s\t%.2f\t%.2f\t%.2f\t%i\t%.2f\t%.2f"%(img_name,text_i,perimeter,area,rate,shape,leftRate,centerRate), file=output_txt)
+            cv.putText(contour_img, text_i, location, cv.FONT_HERSHEY_COMPLEX, 1.0, (0,0,0),3)
+            print("%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%i\t%.2f\t%.2f"%(name,text_i,perimeter,area,realarea,rate,shape,leftRate,centerRate), file=f1)
         else:
             print("the area " + str(area) + " is too little to countect")
-    output_img = img_name + "_o.jpg"
-    cv.putText(image, img_name, (30,30), cv.FONT_HERSHEY_COMPLEX, 1.0, (0,0,0), 3)
-    cv.imwrite(output_img, image)
+    cv.putText(contour_img, name, (30,30), cv.FONT_HERSHEY_COMPLEX, 1.0, (0,0,0), 3)
+    cv.imwrite(outimg_path, contour_img)
+    print("the area calculation succeeded! ")
     return
 
 
-    
-print("--------")
-img_name = "xiufu"
-output_img = img_name + "_o.jpg"
-output_txt = img_name + "_o.txt"
-src = cv.imread("D:\JMW\Python\picture_data\/xiufu.jpg")
-with open(output_txt, "w")as f1:
-    print("#sample\tleaf\tcontourPerimeter\tcontourArea\trectangleRate\tshape\tleftRate\tcenterRate", file=f1)
-    edge_demo(src, img_name,f1)
+def main(image_path, height1=21, length1=29.7, img_name=None, outdir=None):
+    background = height1*length1
+    if img_name is None:
+        imgname = op.basename(image_path)
+        allname = op.splitext(imgname)[0]
+        name = allname.split("_")[-2]
+    else:
+        name = img_name
+        allname = name + "_"
+    output_img = allname + "o.jpg"
+    output_txt = allname + "o.txt"
+    if outdir is None:
+        outpath = op.dirname(image_path)
+    else:
+        outpath = outdir
+    outimg_path = op.join(outpath, output_img)
+    outtxt_path = op.join(outpath, output_txt)
+    image = cv.imread(image_path)
+    with open(outtxt_path, "w")as f1:
+        print("#sample\tleaf\tcontourPerimeter\tcontourArea\trealarea\trectangleRate\tshape\tleftRate\tcenterRate", file=f1)
+        calc_area(image, background, name, outimg_path,f1)
+
+# if __name__ == "__main__":
+#     main(sys.argv[1:])

@@ -23,12 +23,12 @@ def remove_reflections(image):
 
 #crop the background
 def edge_crop(image): 
-    brurred = cv.GaussianBlur(image, (5, 5), 0) #高斯模糊先去噪，因为Canny对噪声敏感，但是不能模糊的太厉害，不然会导致一些边缘被模糊掉
+    brurred = cv.GaussianBlur(image, (5, 5), 0)
     gray = cv.cvtColor(brurred, cv.COLOR_BGR2GRAY)
     #mimg = cv.adaptiveThreshold(gray, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY,11,2)
     thr, mimg = cv.threshold(gray, 160, 255, cv.THRESH_BINARY)
     kernel = np.ones((5,5),np.uint8)
-    opening = cv.morphologyEx(mimg, cv.MORPH_OPEN, kernel)               # 防止A4的轮廓被下一步的中值滤波去除，变大一点
+    opening = cv.morphologyEx(mimg, cv.MORPH_OPEN, kernel)
     edgo_output = cv.Canny(opening, 100, 125)
     # cv.imwrite("threshold.jpg", gray)
     # cv.imwrite("edgo.jpg", edgo_output)
@@ -46,14 +46,14 @@ def edge_crop(image):
         if area >= int(hig*length/3):
             i = 1
             epsilon = 0.1 * cv.arcLength(contour, True)
-            approx = cv.approxPolyDP(contour, epsilon, True)        # 获取近似轮廓
+            approx = cv.approxPolyDP(contour, epsilon, True)
             #print(approx)
-            hull = cv.convexHull(approx)                              # 默认返回坐标点
+            hull = cv.convexHull(approx) 
             #print(hull)
             #hull_img = cv.polylines(image, [hull], True, (0, 255, 0), 2)
             #cv.imwrite('hull_img.jpg', hull_img)
             if len(hull) == 4:
-                dst = four_point_transform(image, hull.reshape(4,2))    # 矫正变换
+                dst = four_point_transform(image, hull.reshape(4,2)) 
                 print("crop down well")
                 return dst
             

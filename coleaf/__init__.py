@@ -58,6 +58,15 @@ from . import leafarea as _leafarea
     'image_path',
 )
 @click.option(
+    '-t', '--img_type',
+    default="photo",
+    help="the type of picture."
+        "The original image taken with the <photo> parameter."
+        "The memo scans pictures with <scanned> parameter",
+    show_default=True,
+    metavar="pthoto/scanned"
+)
+@click.option(
     '-g', '--height',
     default=21,
     type=float,
@@ -74,8 +83,10 @@ from . import leafarea as _leafarea
 @click.option(
     '-n', '--name',
     default=None,
+    type=str,
     help="sample name,default name is the picture name, "
-        "if you have already performed a prepare operation, "
+        "no '_' or '.' in name. "
+        "If you have already performed a prepare operation, "
         "the default is <sample name_operation name>. ",
 )
 @click.option(
@@ -84,10 +95,39 @@ from . import leafarea as _leafarea
     help="directory of output, defalut output into input pathway. ",
     metavar="PATH",
 )
-def leafarea(image_path, height, length, name, outdir):
+def leafarea(image_path, img_type, height, length, name, outdir):
     """
     Calculate the leaf erea.
 
     IMAGE_PATH: Path to the image.
     """
-    _leafarea.main(image_path, height, length, name, outdir)
+    _leafarea.main(image_path, img_type, height, length, name, outdir)
+
+
+from . import trichomes as _trichomes
+
+@cli.command()
+@click.argument(
+    'image_path',
+)
+
+@click.option(
+    '-n', '--name',
+    default=None,
+    type=str,
+    help="sample name,default name is the picture name, "
+        "no '_' or '.' in name. "
+)
+@click.option(
+    '-o', '--outdir',
+    default=None,
+    help="directory of output, defalut output into input pathway. ",
+    metavar="PATH",
+)
+def trichomes(image_path, name, outdir):
+    """
+    Count the number of trichomes on the leaves.
+
+    IMAGE_PATH: Path to the image.
+    """
+    _trichomes.main(image_path, name, outdir)

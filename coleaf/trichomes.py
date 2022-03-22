@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 import sys
+from unittest.mock import NonCallableMagicMock
 import cv2 as cv
 import numpy as np
+import os.path as op
 
-def count_trich(image, img_name):
+def count_trich(image, outimg_path):
     gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
     clahe = cv.createCLAHE(clipLimit=5.0, tileGridSize=(5, 5))
     dst = clahe.apply(gray)
@@ -22,23 +24,31 @@ def count_trich(image, img_name):
             continue
         rate = min(width,height)/max(width,height)
         rate = round(rate, 2)
-        eara = round(width*height, 2)
+        area = round(width*height, 2)
         if rate <= 0.5 and max(width, height) >= 70:
             i = i+1
             rect = ((cx, cy), (width, height), theta)
             box = np.int0(cv.boxPoints(rect))
             cv.drawContours(image, [box], 0, (255, 0, 255), 2)
     print(i)
-    output = img_name + "_o.jpg"
-    cv.imwrite(output, image)
+    cv.imwrite(outimg_path, image)
     return
 
-def main(args):
-    image, image_name = args
-    img_name = image_name
-    print("--------")
-    src = cv.imread(image)
-    count_trich(src, img_name)
+def main(image_path, img_name=None, outdir=None):
+    if img_name is None:
+        imgname = op.basename(image_path)
+        allname = op.splitext(imgname)[0]
+    else:
+        allname = img_name
+    output_img = allname+"_t.jpg"
+    if outdir is None:
+        outpath = op.dirname(image_path)
+    else:
+        outpath = outdir
+    outimg_path =op.join(outpath,output_img)
+
+    image = cv.imread(image_path)
+    count_trich(image, outimg_path)
    
 # if __name__=="__main__":
 #     if len(sys.argv) < 3:

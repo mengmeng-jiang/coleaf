@@ -1,34 +1,37 @@
 # coleaf: Leaf phenotype investigation
 
-author | Mengwei Jiang  
+Author | Mengwei Jiang  
 Email | mengmengjiang.1105@gmail.com
 
 ## Instruction
 coleaf is a tool to collect some traits of tea leaves. Such as the leaf area, leaf aspect ratio, leaf shape，trichome number.
-to be continue (2022.3.6)
+to be continue (2022.3.22)
 
 ## Dependenies
-- python==3.7  
+- python==3.7 
+- click 
 - opencv==3.4.3  
 - numpy  
 - plantcv  
 ## Install
 ```
 git clone https://github.com/mengmeng-jiang/coleaf.git
-cd TeaImaging
+export PYTHONPATH=/path/to/coleaf:$PYTHONPATH
+chmod +x /path/to/coleaf/bin/*
+export PATH=/path/to/coleaf/bin:$PATH
 ```
 ## Usage
-- lear area
-```python
-#for the image scanned with iphone
-python leaf_area.py <image> <image_name>
-
-#for the original image taken by mobile phone
-python python leaf_area_original.py <image> <image_name> <image> <image_name>
+<kbd>prepare</kbd>  
+```bash
+coleaf prepare <image_path>   
 ```
-- trichome counter
-```python
-python trichome_counter.py <image> <image_name>
+<kbd>leararea</kbd>
+```bash
+coleaf leafarea <image_path> 
+```
+<kbd>trichomes</kbd>
+```bash
+coleaf trichomes <image_path>
 ```
 ## Reference
 

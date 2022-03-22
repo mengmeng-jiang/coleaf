@@ -1,6 +1,4 @@
-
-from email.policy import default
-from tkinter import N
+#!/usr/bin/env python
 import click
 
 __author__ = ("Mengwei Jiang")
@@ -110,7 +108,6 @@ from . import trichomes as _trichomes
 @click.argument(
     'image_path',
 )
-
 @click.option(
     '-n', '--name',
     default=None,

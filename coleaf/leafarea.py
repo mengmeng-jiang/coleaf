@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 
-from unicodedata import name
-from webbrowser import BackgroundBrowser
-from plantcv import plantcv as pcv
+import sys
+import os.path as op
+
 import cv2 as cv
 from imutils.perspective import four_point_transform
 import numpy as np
 import imutils
-import sys
-import os.path as op
 
+from plantcv import plantcv as pcv
 
 #Calculate the leaf erea
 def calc_photo(image):
@@ -20,7 +19,7 @@ def calc_photo(image):
         brurred = cv.GaussianBlur(image, (7, 7), 0)
     gray = cv.cvtColor(brurred, cv.COLOR_BGR2GRAY)
     edgo_output = cv.Canny(gray, 25, 150)
-    kernel = np.ones((3,3), np.uint8)
+    kernel = np.ones((3, 3), np.uint8)
     closing =cv.morphologyEx(edgo_output, cv.MORPH_CLOSE, kernel)
     closing[0:int(0.01*height2),0:length2] = [0]
     closing[int(0.99*height2):height2,0:length2] = [0]
@@ -36,10 +35,11 @@ def calc_photo(image):
     # cv.imwrite("countour.jpg", closing)
 
 def calc_scanned(image):
-    lab = pcv.rgb2gray_lab(rgb_img=image,channel="b")
-    ret, thesh = cv.threshold(lab, 0,255, cv.THRESH_BINARY_INV+cv.THRESH_OTSU)
-    img_binary = pcv.threshold.binary(gray_img=lab, threshold=ret, max_value=255, object_type="light")
-    kernel = np.ones((9,9), np.uint8)
+    lab = pcv.rgb2gray_lab(rgb_img=image, channel="b")
+    ret, thesh = cv.threshold(lab, 0, 255, cv.THRESH_BINARY_INV+cv.THRESH_OTSU)
+    img_binary = pcv.threshold.binary(gray_img=lab, threshold=ret, 
+                                    max_value=255, object_type="light")
+    kernel = np.ones((9, 9), np.uint8)
     closing = cv.morphologyEx(img_binary, cv.MORPH_CLOSE, kernel)
     return(closing)
 
@@ -66,7 +66,7 @@ def measure_object(original_img, closing_img, background, name, outpath, output_
             cy = int(M['m01']/M['m00'])
             center = (cx,cy)
             cv.circle(contour_img,center, 5, (255, 255, 0), -1)
-            rate = round(max(w1,h1)/min(w1,h1), 1)
+            rate = round(max(w1, h1) / min(w1, h1), 1)
             if rate <= 2.0 :
                 shape = 0
             elif rate > 2.0 and rate <= 2.5:
@@ -83,12 +83,12 @@ def measure_object(original_img, closing_img, background, name, outpath, output_
             cv.drawContours(contour_img, [box], 0, (67, 93, 220), 2)
             #print(i,h1,h2,hig)
             
-            (leftx,lefty) = tuple(contour[contour[:,:,0].argmin()][0])
-            cv.circle(contour_img,(leftx,lefty), 5, (255, 255, 0), -1)
+            (leftx, lefty) = tuple(contour[contour[:,:,0].argmin()][0])
+            cv.circle(contour_img,(leftx, lefty), 5, (255, 255, 0), -1)
             (rightx,righty) = tuple(contour[contour[:,:,0].argmax()][0])
-            cv.circle(contour_img,(rightx,righty), 5, (255, 255, 0), -1)
-            (topx,topy) = tuple(contour[contour[:,:,1].argmin()][0])
-            (bottox,bottoy) = tuple(contour[contour[:,:,1].argmax()][0])            
+            cv.circle(contour_img,(rightx, righty), 5, (255, 255, 0), -1)
+            (topx, topy) = tuple(contour[contour[:,:,1].argmin()][0])
+            (bottox, bottoy) = tuple(contour[contour[:,:,1].argmax()][0])            
             len1 = int(bottoy) - int(topy) 
             len2 = int(bottoy) - int(lefty)
             leftRate = int(len2)/int(len1)
@@ -103,11 +103,12 @@ def measure_object(original_img, closing_img, background, name, outpath, output_
             text_x = np.int(x1)
             text_y = np.int(y1+h1+30)
             location = (text_x,text_y)
-            cv.putText(contour_img, text_i, location, cv.FONT_HERSHEY_COMPLEX, 1.0, (0,0,0),3)
-            print("%s\t%s\t%.2f\t%.2f\t%.5f\t%.3f\t%.2f\t%i\t%.2f\t%.2f"%(name,text_i,perimeter,area,realrate, realarea,rate,shape,leftRate,centerRate), file=f1)
+            cv.putText(contour_img, text_i, location, cv.FONT_HERSHEY_COMPLEX, 1.0, (0, 0, 0), 3)
+            print("%s\t%s\t%.2f\t%.2f\t%.5f\t%.3f\t%.2f\t%i\t%.2f\t%.2f"%(
+                name,text_i,perimeter,area,realrate, realarea,rate,shape,leftRate,centerRate), file=f1)
         else:
             print("the area " + str(area) + " is too little to countect")
-    cv.putText(contour_img, name, (30,30), cv.FONT_HERSHEY_COMPLEX, 1.0, (0,0,0), 3)
+    cv.putText(contour_img, name, (30, 30), cv.FONT_HERSHEY_COMPLEX, 1.0, (0,0,0), 3)
     outimg_path = op.join(outpath, output_img)
     cv.imwrite(outimg_path, contour_img)
     print("the area calculation succeeded! ")

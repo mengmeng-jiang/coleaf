@@ -1,9 +1,11 @@
 #!/usr/bin/env python
+
 import sys
-from unittest.mock import NonCallableMagicMock
+import os.path as op
+
 import cv2 as cv
 import numpy as np
-import os.path as op
+
 
 def count_trich(image, outimg_path):
     gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)

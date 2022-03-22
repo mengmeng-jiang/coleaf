@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 
-
 import sys
+import os.path as op
 
 import cv2 as cv
 import numpy as np
-import os.path as op
-
 
 from imutils.perspective import four_point_transform
 
@@ -53,7 +51,7 @@ def edge_crop(image):
             #hull_img = cv.polylines(image, [hull], True, (0, 255, 0), 2)
             #cv.imwrite('hull_img.jpg', hull_img)
             if len(hull) == 4:
-                dst = four_point_transform(image, hull.reshape(4,2)) 
+                dst = four_point_transform(image, hull.reshape(4, 2)) 
                 print("crop down well")
                 return dst
             
@@ -64,7 +62,7 @@ def edge_crop(image):
         print(" Eligible contour cannot be obtained ")
 
 
-def main(image_path, crop = False, reflections = False, outdir=None):
+def main(image_path, crop=False, reflections=False, outdir=None):
     image = cv.imread(image_path)
     print("----------")
     tip = "_i"

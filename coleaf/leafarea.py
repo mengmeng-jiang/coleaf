@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from configparser import Interpolation
 import sys
 import os.path as op
 
@@ -12,12 +13,17 @@ from plantcv import plantcv as pcv
 
 #Calculate the leaf erea
 def calc_photo(image):
-    height2, length2, channel=image.shape 
-    if height2 < 1000:
-        brurred = cv.GaussianBlur(image, (5, 5), 0)
-    else:
-        brurred = cv.GaussianBlur(image, (7, 7), 0)
+    height2, length2, channel=image.shape
+    print("original :" + str(height2), str(length2))
+    while height2 > 1000:
+        image = cv.resize(image, None, fx=0.8, fy=0.8,interpolation=cv.INTER_LINEAR )
+        #brurred = cv.bilateralFilter(image, 0, 170, 15)
+        height2, length2,chennel=image.shape
+        # print(height2)
+    
+    brurred = cv.GaussianBlur(image, (5, 5), 0)
     gray = cv.cvtColor(brurred, cv.COLOR_BGR2GRAY)
+    #dst = cv.equalizeHist(gray)
     edgo_output = cv.Canny(gray, 25, 150)
     kernel = np.ones((3, 3), np.uint8)
     closing =cv.morphologyEx(edgo_output, cv.MORPH_CLOSE, kernel)
@@ -25,20 +31,17 @@ def calc_photo(image):
     closing[int(0.99*height2):height2,0:length2] = [0]
     closing[0:height2,0:int(0.01*length2)] = [0]
     closing[0:height2,int(0.99*height2):height2] = [0]
-    return(closing)
-    # closing_path = op.join(outpath, "closing.jpg")
-    # cv.imwrite(closing_path, closing)
-    # closing[int(0.4668*hig):int(0.4865*hig),0:len] = [0]
-    # closing[int(0.9524*hig):int(0.9754*hig),0:len] = [0]
-    # closing[0:hig,int(0.3165*len):int(0.3355*len)] = [0]
-    # closing[0:hig,int(0.6605*len):int(0.6775*len)] = [0]
-    # cv.imwrite("countour.jpg", closing)
+    # closing[int(0.4668*height2):int(0.4865*height2),0:length2] = [0]
+    # closing[int(0.9524*height2):int(0.9754*height2),0:length2] = [0]
+    # closing[0:height2,int(0.3165*length2):int(0.3355*length2)] = [0]
+    # closing[0:height2,int(0.6605*length2):int(0.6775*length2)] = [0]
+    return (closing)
+
 
 def calc_scanned(image):
     lab = pcv.rgb2gray_lab(rgb_img=image, channel="b")
     ret, thesh = cv.threshold(lab, 0, 255, cv.THRESH_BINARY_INV+cv.THRESH_OTSU)
-    img_binary = pcv.threshold.binary(gray_img=lab, threshold=ret, 
-                                    max_value=255, object_type="light")
+    img_binary = pcv.threshold.binary(gray_img=lab, threshold=ret, max_value=255, object_type="light")
     kernel = np.ones((9, 9), np.uint8)
     closing = cv.morphologyEx(img_binary, cv.MORPH_CLOSE, kernel)
     return(closing)
@@ -47,16 +50,19 @@ def calc_scanned(image):
 #the color space is BGR
 def measure_object(original_img, closing_img, background, name, outpath, output_img, f1):  
     height2, length2, channel=original_img.shape
+    closing_img = cv.resize(closing_img, (length2,height2), interpolation = cv.INTER_LINEAR ) #缩小后放大
+    print("after :" + str(height2), str(length2))
     outImage, contours, heriachy = cv.findContours(closing_img, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     contour_img = cv.drawContours(original_img, contours, -1, (50, 214, 241), 2)
 
     i = 0
     for contour in contours:   
         area = cv.contourArea(contour)
-        if area >= int(0.001*height2*length2) and area < int(0.7*height2*length2):
+        if area >= round(0.001*height2*length2) and area < round(0.7*height2*length2):
             i+=1
             print(i)
             realrate = area/(height2*length2)
+            print(area,realrate)
             realarea = realrate*background
             perimeter = cv.arcLength(contour, True)
             x1, y1, w1, h1 = cv.boundingRect(contour)
@@ -116,7 +122,9 @@ def measure_object(original_img, closing_img, background, name, outpath, output_
 
 
 def main(image_path, img_type, height1=21, length1=29.7, img_name=None, outdir=None):
+    #print(height1,length1)
     background = height1*length1
+    print(background)
     if img_name is None:
         imgname = op.basename(image_path)
         allname = op.splitext(imgname)[0]
@@ -135,8 +143,10 @@ def main(image_path, img_type, height1=21, length1=29.7, img_name=None, outdir=N
     image = cv.imread(image_path)
     if img_type == "photo":
         closing = calc_photo(image)
+        # closing_path = op.join(outpath, "closing.jpg")
+        # cv.imwrite(closing_path,closing)
     elif img_type == "scanned":
-        closing = calc_scanned(image) 
+        closing = calc_scanned(image)
     with open(outtxt_path, "w")as f1:
         print("#sample\tleaf\tcontourPerimeter\tcontourArea\trealrate\trealarea\trectangleRate\tshape\tleftRate\tcenterRate", file=f1)
         #closing_img = cv.imread(closing, 0)

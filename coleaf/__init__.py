@@ -28,6 +28,20 @@ from . import prepare as _prepare
     show_default=True,
 )
 @click.option(
+    '-g', '--height',
+    default=21,
+    type=float,
+    help="the width of the background paper when cropped(cm).",
+    show_default=True,
+)
+@click.option(
+    '-l', '--length',
+    default=29.7,
+    type=float,
+    help="the length of the background paper when cropped(cm).",
+    show_default=True,
+)
+@click.option(
     '-r', '--remove_reflections',
     default=False,
     is_flag=True,
@@ -40,13 +54,13 @@ from . import prepare as _prepare
     help="directory of output, default output into input pathway.",
     metavar="PATH"
 )
-def prepare(image_path, crop, remove_reflections, outdir):
+def prepare(image_path, crop, height, length, remove_reflections, outdir):
     """
     Prepare the image.
 
     IMAGE_PATH: Path to the image.
     """
-    _prepare.main(image_path, crop, remove_reflections, outdir)
+    _prepare.main(image_path, crop, height, length, remove_reflections, outdir)
 
 
 from . import leafarea as _leafarea

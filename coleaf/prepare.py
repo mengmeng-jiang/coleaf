@@ -20,7 +20,8 @@ def remove_reflections(image):
 
 
 #crop the background
-def edge_crop(image,real_height, real_length):
+def edge_crop(image,real_height, real_length,outpath,imgname):
+
     real_rate = round(real_height/real_length, 2)
     print("real_rate:" + str(real_rate))
     brurred = cv.GaussianBlur(image, (5, 5), 0)
@@ -29,10 +30,10 @@ def edge_crop(image,real_height, real_length):
     thr, mimg = cv.threshold(gray, 160, 255, cv.THRESH_BINARY)
     kernel = np.ones((5,5),np.uint8)
     opening = cv.morphologyEx(mimg, cv.MORPH_OPEN, kernel) 
-    edgo_output = cv.Canny(opening, 75, 150)
+    edgo_output = cv.Canny(opening, 75, 150) 
     # cv.imwrite("threshold.jpg", gray)
     # cv.imwrite("edgo.jpg", edgo_output)
-    # cv.imwrite("dilation.jpg", opening)
+    # cv.imwrite("dilation.jpg", canny_out)
     height1, length1 = edgo_output.shape
     print(height1*length1)
     cloneImage, contours, heriachy = cv.findContours(edgo_output, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
@@ -41,7 +42,7 @@ def edge_crop(image,real_height, real_length):
         return area
     contours.sort(key = cnt_area, reverse=True)
     contour_img = cv.drawContours(edgo_output, contours[0], -1, (255, 255, 255), 2)
-    cv.imwrite("contour.jpg", contour_img)
+    #cv.imwrite("contour.jpg", contour_img)
     print(cv.contourArea(contours[0]))
     #res = []
     for contour in contours[:5]:
@@ -54,8 +55,9 @@ def edge_crop(image,real_height, real_length):
             #print(approx)
             hull = cv.convexHull(approx)
             #print(hull)
-            #hull_img = cv.polylines(image, [hull], True, (0, 255, 0), 2)
-            #cv.imwrite('hull_img.jpg', hull_img)
+            # hull_img = cv.polylines(image, [hull], True, (0, 255, 0), 2) #绘制绿框
+            # outhull = op.join(outpath, imgname+"_hull.jpg")
+            # cv.imwrite(outhull, hull_img)
             def get_dist(p1,p2):
                 distance=math.pow((p1[0]-p2[0]),2) + math.pow((p1[1]-p2[1]),2)
                 distance=math.sqrt(distance)
@@ -64,18 +66,29 @@ def edge_crop(image,real_height, real_length):
             down = (hull[1])[0]
             left = (hull[2])[0]
             up = (hull[3])[0]
-            # height2 = (get_dist(up, right)+get_dist(left,down))/2
-            # height2 = round(height2,2)
-            #length2 = (get_dist(left, up)+get_dist(right,down))/2
-            length2 = get_dist(left, up)
-            length2 = round(length2) 
-            height2 = round(length2*real_rate)
+            counter_height = max(get_dist(up, right), get_dist(left,down))
+            counter_height = round(counter_height)
+
+            counter_length = max(get_dist(right,down), get_dist(left, up))            
+            counter_length = round(counter_length) 
+
             if len(hull) == 4:
-                pts1 = np.float32([left,up,right,down])
-                pts2 = np.float32([[0,0],[length2,0],[length2,height2],[0,height2]])
-                m = cv.getPerspectiveTransform(pts1,pts2)
-                dst=cv.warpPerspective(image,m,(length2,height2))
-                crop_rate = round(height2/length2,2)
+                if counter_length >= counter_height:
+                    length2 = counter_length
+                    height2 = round(length2*real_rate)
+                    pts1 = np.float32([left,up,right,down])
+                    pts2 = np.float32([[0,0],[length2,0],[length2,height2],[0,height2]])
+                    m = cv.getPerspectiveTransform(pts1,pts2)
+                    dst=cv.warpPerspective(image,m,(length2,height2))
+                    crop_rate = round(height2/length2,2)
+                if counter_length < counter_height:
+                    height2 = counter_height
+                    length2 = round(height2*real_rate)
+                    pts1 = np.float32([up,right,down,left])
+                    pts2 = np.float32([[0,0],[height2,0],[height2,length2],[0,length2]])
+                    m = cv.getPerspectiveTransform(pts1,pts2)
+                    dst=cv.warpPerspective(image,m,(height2,length2))
+                    crop_rate = round(length2/height2,2)
                 print("crop_rate: " + str(crop_rate))
                 #dst = four_point_transform(image, approx.reshape(height2,length2))
                 print("you did a great job")
@@ -83,25 +96,19 @@ def edge_crop(image,real_height, real_length):
             else:
                 print(" The four points of the  contour cannot be obtained.")
                 #print(" try to change a flat sheet of paper, and make sure here is only one papare ")
-            break
+                return image
+            #break
         else:
             print(" Eligible contour cannot be obtained, get closer to get the photo and try again ")
+
+            return image
 
 
 
 def main(image_path, crop=False, height=21, length=29.7, reflections=False, outdir=None):
-    image = cv.imread(image_path)
     print("----------")
-    tip = "_i"
-    if crop is True:
-        image = edge_crop(image,height,length)
-        tip = "_c"
-    if reflections is True:
-        image = remove_reflections(image)
-        tip = "_r"
-
-    if crop is True and reflections is True:
-        tip = "_p"
+    image = cv.imread(image_path)
+    
     #if imgname is None:
     imgname = op.basename(image_path)
     name = op.splitext(imgname)[0]
@@ -109,8 +116,19 @@ def main(image_path, crop=False, height=21, length=29.7, reflections=False, outd
         outpath = op.dirname(image_path)
     else:
         outpath = outdir
-    outname = op.join(outpath, name + tip + ".jpg")
+    
+    tip = "_i"
+    if crop is True:
+        image = edge_crop(image,height,length,outpath,imgname)
+        tip = "_c"
+    if reflections is True:
+        image = remove_reflections(image)
+        tip = "_r"
 
+    if crop is True and reflections is True:
+        tip = "_p"
+
+    outname = op.join(outpath, name + tip + ".jpg")
     cv.imwrite(outname, image)
 
 # if __name__ == "__main__":

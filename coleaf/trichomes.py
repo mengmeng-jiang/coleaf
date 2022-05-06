@@ -32,7 +32,7 @@ def count_trich(image, outimg_path):
             rect = ((cx, cy), (width, height), theta)
             box = np.int0(cv.boxPoints(rect))
             cv.drawContours(image, [box], 0, (255, 0, 255), 2)
-    print(i)
+    print(i, file=sys.stdout)
     cv.imwrite(outimg_path, image)
     return
 
@@ -40,9 +40,10 @@ def main(image_path, img_name=None, outdir=None):
     if img_name is None:
         imgname = op.basename(image_path)
         allname = op.splitext(imgname)[0]
+        #allname = imgname
     else:
         allname = img_name
-    output_img = allname+"_t.jpg"
+    output_img = allname+"_t.tif"
     if outdir is None:
         outpath = op.dirname(image_path)
     else:

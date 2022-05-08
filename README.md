@@ -37,6 +37,21 @@ coleaf leafarea <image_path>
 ```bash
 coleaf trichomes <image_path>
 ```
+
+## test
+If the image is a scanned image or a brighter photo, you can use the "-t scanned" option.
+```
+mkdir ./test/leaf/scannedOut/
+coleaf perpare -c ./test/leaf/scanned/ -o ./test/leaf/scannedOut/
+coleaf leafarea -t scanned ./test/leaf/scannedOut/
+```
+If the image is a darker photo, you don't have to specify options,just run it.
+```
+mkdir ./test/leaf/photoOut/
+coleaf prepare -c ./test/leaf/photo/ -o ./test/leaf/photoOut/
+coleaf leafarea ./test/leaf/photoOut/
+```
+
 ## Reference
 
 ## Tips

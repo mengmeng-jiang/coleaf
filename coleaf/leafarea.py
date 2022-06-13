@@ -3,11 +3,13 @@
 from configparser import Interpolation
 import sys
 import os.path as op
+import os
 
 import cv2 as cv
 from imutils.perspective import four_point_transform
 import numpy as np
 import imutils
+import math
 
 from plantcv import plantcv as pcv
 
@@ -63,9 +65,17 @@ def measure_object(original_img, closing_img, background, name, outpath, output_
         if area >= round(0.005*height2*length2) and area < round(0.7*height2*length2):
             i+=1
             print(i)
-            realrate = area/(height2*length2)
-            print(area,realrate)
-            realarea = realrate*background
+            realrate = (height2*length2)/background #一厘米是多少像素
+            realarea = area/realrate
+            leftmost = tuple(contour[contour[:,:,0].argmin()][0])
+            rightmost = tuple(contour[contour[:,:,0].argmax()][0])
+            topmost = tuple(contour[contour[:,:,1].argmin()][0])
+            bottommost = tuple(contour[contour[:,:,1].argmax()][0])
+            cv.circle(contour_img, leftmost, 5, (255, 255, 0), -1)
+            cv.circle(contour_img, rightmost, 5, (255, 255, 0), -1)
+            cv.circle(contour_img, topmost, 5, (255, 255, 0), -1)
+            cv.circle(contour_img, bottommost, 5, (255, 255, 0), -1)
+            
             perimeter = cv.arcLength(contour, True)
             x1, y1, w1, h1 = cv.boundingRect(contour)
             cv.rectangle(contour_img, (x1, y1), (x1+w1, y1+h1), (250, 152, 56), 2)
@@ -74,42 +84,60 @@ def measure_object(original_img, closing_img, background, name, outpath, output_
             cy = int(M['m01']/M['m00'])
             center = (cx,cy)
             cv.circle(contour_img,center, 5, (255, 255, 0), -1)
-            rate1 = round(max(w1, h1) / min(w1, h1), 2)
-
+            
+            bound_h=max(w1, h1)
+            bound_w=min(w1, h1)
+            
+            #attention, here I named width and height with length, rather than the angle seta.
             rect = cv.minAreaRect(contour)
-            w2=rect[1][0]
-            h2=rect[1][1]
-            rate2 = round(max(w2, h2) / min(w2, h2), 2)
+            min_h=max(rect[1][0], rect[1][1]) #width has the larger length
+            min_w=min(rect[1][0], rect[1][1])
+            
+            #rate2 = round(max(min_w, min_h) / min(min_w, min_h), 2)
             box = cv.cv.BoxPoints() if imutils.is_cv2()else cv.boxPoints(rect)
             box = np.int0(box)
             cv.drawContours(contour_img, [box], 0, (67, 93, 220), 2)
             
-            if rate2 <= 2.00:
-                shape = 0
-            elif rate2 > 2.00 and rate2 <= 2.50:
-                shape = 3
-            elif rate2 > 2.50 and rate2 <= 3.00:
-                shape = 4
-            elif rate2 > 3.00 and rate2 <= 10.00:
-                shape = 5
+            #计算长宽比
+            def get_dist(p1,p2):
+                distance=math.pow((p1[0]-p2[0]),2) + math.pow((p1[1]-p2[1]),2)
+                distance=math.sqrt(distance)
+                return distance
+            
+            top2bot = get_dist(bottommost,topmost)
+            lef2rig =  get_dist(rightmost,leftmost)
+            if top2bot >= lef2rig:
+                dif1=math.fabs(top2bot-bound_h)
+                dif2=math.fabs(top2bot-min_h)
             else:
-                shape = 6
+                dif1=math.fabs(lef2rig-bound_h)
+                dif2=math.fabs(lef2rig-min_h)
+            
+            if dif1 < dif2:
+                rate = round(bound_h / bound_w,2)
+                leaf_length=bound_h
+                leaf_width=bound_w
+                cv.rectangle(contour_img, (x1, y1), (x1+w1, y1+h1), (0, 255, 0), 2)
+            else:
+                rate = round(min_h / min_w,2)
+                leaf_length=min_h
+                leaf_width=min_w
+                cv.drawContours(contour_img, [box], 0, (0, 255, 0), 2)
+            
+            if rate <= 2.00:
+                shape = 0
+            elif rate > 2.00 and rate <= 2.50:
+                shape = 1
+            elif rate > 2.50 and rate <= 3.00:
+                shape = 2
+            elif rate > 3.00 and rate <= 10.00:
+                shape = 3
+            else:
+                shape = 4
 
             #print(i,h1,h2,hig)
             
-            (leftx, lefty) = tuple(contour[contour[:,:,0].argmin()][0])
-            cv.circle(contour_img,(leftx, lefty), 5, (255, 255, 0), -1)
-            (rightx,righty) = tuple(contour[contour[:,:,0].argmax()][0])
-            cv.circle(contour_img,(rightx, righty), 5, (255, 255, 0), -1)
-            (topx, topy) = tuple(contour[contour[:,:,1].argmin()][0])
-            (bottox, bottoy) = tuple(contour[contour[:,:,1].argmax()][0])            
-            len1 = int(bottoy) - int(topy) 
-            len2 = int(bottoy) - int(lefty)
-            leftRate = int(len2)/int(len1)
-            #print(leftRate)
-            len3 = int(bottoy) - int(cy)
-            centerRate = int(len3)/int(len1)
-            #print(centerRate)
+
             if i <= 9: 
                 text_i = "0%s"%i
             elif i > 9:
@@ -118,8 +146,8 @@ def measure_object(original_img, closing_img, background, name, outpath, output_
             text_y = np.int(y1+h1+30)
             location = (text_x,text_y)
             cv.putText(contour_img, text_i, location, cv.FONT_HERSHEY_COMPLEX, 1.0, (0, 0, 0), 3)
-            print("%s\t%s\t%.2f\t%.2f\t%.5f\t%.3f\t%.2f\t%.2f\t%i\t%.2f\t%.2f"%(
-                name,text_i,perimeter,area,realrate, realarea,rate1,rate2,shape,leftRate,centerRate), file=f1)
+            print("%s\t%s\t%.2f\t%.2f\t%.3f\t%.2f\t%i\t%i\t%.2f\t%i"%(
+                name,text_i,perimeter,area,realrate,realarea,leaf_length,leaf_width,rate,shape), file=f1)
         else:
             print("the area " + str(area) + " is too little to countect")
     cv.putText(contour_img, name, (30, 30), cv.FONT_HERSHEY_COMPLEX, 1.0, (0,0,0), 3)
@@ -156,9 +184,8 @@ def main(image_path, img_type, height1=21, length1=29.7, img_name=None, outdir=N
     elif img_type == "scanned":
         closing = calc_scanned(image)
     with open(outtxt_path, "w")as f1:
-        print("#sample\tleaf\tcontourPerimeter\tcontourArea\trealrate\trealarea\trectangleRate\tmintangleRate\tshape\tleftRate\tcenterRate", file=f1)
+        print("#sample\tleaf\tcontourPerimeter\tcontourArea\trealrate\trealarealeaf_length\tleaf_width\trate\tshape", file=f1)
         #closing_img = cv.imread(closing, 0)
         measure_object(image, closing, background, allname, outpath, output_img, f1)
 
-# if __name__ == "__main__":
-#     main(sys.argv[1:])
+

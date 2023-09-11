@@ -8,7 +8,8 @@ coleaf is a tool to collect some traits of tea leaves. Such as the leaf area, le
 to be continue (2022.3.22)  
 it is small and esay to install. you don't have to make a ruler to calculate leaf size. just a mobelphone, an A4 paper and a glass(need larger than paper), you can get the size of obgects in batches quickly.    
 to be continue(2022.4.25)  
- 
+When you count the number of trichomes of a piace of tissue, the magnification of the microscope should not be too small, to ensure that the picture is full of tissue. We recommend using a clear image with no blur around the edges, which will result in more accurate numbers
+to be continue(2022.7.25)
 ## Dependenies
 - python==3.7 
 - click 

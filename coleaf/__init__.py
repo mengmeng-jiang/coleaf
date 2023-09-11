@@ -71,7 +71,7 @@ def prepare(image_path, crop, height, length, remove_reflections, outdir):
     When using a folder as input, do not add the -n option. 
     """
     if op.isdir(image_path):
-        image_paths = findByDepth(image_path, suffix=['dng','jpg'])
+        image_paths = findByDepth(image_path, suffix=['dng','jpg','JPG'])
         image_paths = filter(lambda x: not x.endswith(("_t.jpg", "_c.jpg", "_p.jpg", "_o.jpg")), image_paths)
         #print(list(image_paths))
         for p in image_paths:
@@ -140,7 +140,7 @@ def leafarea(image_path, img_type, height, length, name, outdir):
     When using a folder as input, do not add the -n option.
     """
     if op.isdir(image_path):
-        image_paths = findByDepth(image_path, suffix=['jpg', 'dng'])
+        image_paths = findByDepth(image_path, suffix=['jpg', 'dng', 'JPG'])
         
         image_paths = filter(lambda x: not x.endswith("_o.jpg"),image_paths)
         for p in image_paths:
@@ -182,14 +182,17 @@ def trichomes(image_path, name, outdir):
 
     IMAGE_PATH: Path to the image or the folder with some images.
 
-    When using a folder as input, do not add the -n option,and need "> output.txt".
+    When using a folder as input, do not add the -n option,and need "> output.txt" to get the log.
     """
     if op.isdir(image_path):
         image_paths = findByDepth(image_path, suffix=['tif'])
         image_paths = filter(lambda x: not x.endswith("_t.tif"), image_paths)
+        txt_paths = op.join(image_path, "total_result.txt")
+        with open(txt_paths, 'a+') as out:
+            for p in image_paths:
+                print(p, end='\t', file=sys.stdout)
+                _outimg_path, true_nu = _trichomes.main(p, name, outdir)
+                print("%s\t%s"%(_outimg_path, true_nu), file=out)
 
-        for p in image_paths:
-            print(p, end='\t', file=sys.stdout)
-            _trichomes.main(p, name, outdir)
     else:
         _trichomes.main(image_path, name, outdir)

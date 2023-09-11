@@ -39,6 +39,9 @@ def calc_photo(image):
 
 def calc_scanned(image):
     height2, length2, channel=image.shape
+    while height2 > 1000: #这里需要注意的是，这里如果把这个图片缩小了，会导致这个边缘非常的粗糙而且有误差
+        image = cv.resize(image, None, fx=0.8, fy=0.8,interpolation=cv.INTER_LINEAR )
+        height2, length2,chennel=image.shape
     lab = pcv.rgb2gray_lab(rgb_img=image, channel="b")
     ret, thesh = cv.threshold(lab, 0, 255, cv.THRESH_BINARY_INV+cv.THRESH_OTSU)
     img_binary = pcv.threshold.binary(gray_img=lab, threshold=ret, max_value=255, object_type="light")
@@ -62,7 +65,7 @@ def measure_object(original_img, closing_img, background, name, outpath, output_
     i = 0
     for contour in contours:
         area = cv.contourArea(contour)
-        if area >= round(0.005*height2*length2) and area < round(0.7*height2*length2):
+        if area >= round(0.001*height2*length2) and area < round(0.7*height2*length2):
             i+=1
             print(i)
             realrate = (height2*length2)/background #一厘米是多少像素

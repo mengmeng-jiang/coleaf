@@ -9,7 +9,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-
+# This method is suitable for the case where the length is uniform,
+# the hairs are relatively independent, and the cross-linking is less.
 def clahe_demo(image,outimg_hist):
     gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
 
@@ -57,26 +58,26 @@ def clahe_demo(image,outimg_hist):
 
     f,(ax1,ax2) = plt.subplots(1,2,figsize=(10,5),dpi=300)
     ax1.hist(trait['size'][trait['size']>10],5,color="tab:blue")
-    ax1.set_title("contours_length plot",fontsize=15)
+    ax1.set_title("contours_length histogram",fontsize=15)
     ax1.set_ylabel("number",fontsize=13)
     ax1.set_xlabel("pixel",fontsize=13)
-    ax1.set_ylim(0,50)
+    ax1.set_ylim(0,100)
     count,division = pd.np.histogram(trait['size'][trait['size']>10],bins=5) 
-    #print(count,division)
+    print(count,division)
     max2=np.argsort(count)[-2]
     valuemin = division[max2]
 
     filter = trait[trait['size']>valuemin]
     filter_stat = filter.agg(['min','max','mean','std']).round(decimals=2)
     ax2.hist(filter['area'],3,color="orangered")
-    ax2.set_title("trichomes_area plot",fontsize=15)
-    ax2.set_ylim(0,50)
+    ax2.set_title("trichomes_area histogram",fontsize=15)
+    # ax2.set_ylim(0,50)
     ax2.set_ylabel("number",fontsize=13)
     ax2.set_xlabel("pixel",fontsize=13)
     plt.savefig(outimg_hist)
     count2, division2 = pd.np.histogram(filter['area'],bins=3)  
-
-    #print(count2,division2)
+    print(count2,division2)
+    
     max3=np.argsort(count2)[-2]
     valuemin2 = division2[max3]
     area_all = filter['area'][filter['area']>valuemin2].sum()
@@ -84,8 +85,11 @@ def clahe_demo(image,outimg_hist):
     print("trichomes stat: ")
     print(filter_stat)
     #print(area_all)
-    area_true = round(area_all/area_mean)
-    return(valuemin,valuemin2,area_true,contours)
+    try:
+        area_true = round(area_all/area_mean)
+    except ValueError:
+        return
+    return (valuemin,valuemin2,area_true,contours)
 
 def sifter(valuemin,valuemin2,area_true,contours,image,outimg_path):    
     area_big=0
@@ -108,6 +112,7 @@ def sifter(valuemin,valuemin2,area_true,contours,image,outimg_path):
     print("The number of abnormal contours in area:" +"\t"+ str(area_big))
     print("number of intersecting trichomes:" +"\t"+ str(area_true))
     true_nu = nu-area_big+area_true
+
     #print(true_nu)
     height2, length2, channel=image.shape
     text_x = np.int(length2-200)
@@ -115,8 +120,9 @@ def sifter(valuemin,valuemin2,area_true,contours,image,outimg_path):
     location = (text_x,text_y)
     cv.putText(image, str(true_nu), location, cv.FONT_HERSHEY_COMPLEX, 2, (0, 0, 0), 3)
     print(outimg_path+":"+"\t"+ str(true_nu), file=sys.stdout)
+
     cv.imwrite(outimg_path, image)
-    return
+    return true_nu
 
 def main(image_path, img_name=None, outdir=None):
     if img_name is None:
@@ -135,8 +141,14 @@ def main(image_path, img_name=None, outdir=None):
     outimg_path =op.join(outpath, output_img)
 
     image = cv.imread(image_path)
-    valuemin, valuemin2, area_true, contours = clahe_demo(image, outimg_hist)
-    sifter(valuemin, valuemin2, area_true, contours, image, outimg_path)
+    res = clahe_demo(image, outimg_hist)
+
+    if res is None:
+        true_nu = "NA"
+        return outimg_path, true_nu
+    valuemin, valuemin2, area_true, contours = res
+    true_nu = sifter(valuemin, valuemin2, area_true, contours, image, outimg_path)
+    return outimg_path, true_nu
    
 # if __name__=="__main__":
 #     if len(sys.argv) < 3:

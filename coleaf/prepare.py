@@ -106,7 +106,7 @@ def edge_crop(image,real_height, real_length,outpath,imgname):
 
 
 def main(image_path, crop=False, height=21, length=29.7, reflections=False, outdir=None):
-    print("----------")
+    
     image = cv.imread(image_path)
     
     #if imgname is None:
@@ -129,7 +129,9 @@ def main(image_path, crop=False, height=21, length=29.7, reflections=False, outd
         tip = "_p"
 
     outname = op.join(outpath, name + tip + ".jpg")
+    print(outname)
     cv.imwrite(outname, image)
+    print("----------")
 
 # if __name__ == "__main__":
 #     main(sys.argv[1], True, True)

@@ -20,13 +20,14 @@ def remove_reflections(image):
 
 
 #crop the background
+#reference1: https://zhuanlan.zhihu.com/p/463212941
+#refernce2: https://zhuanlan.zhihu.com/p/63214547
 def edge_crop(image,real_height, real_length,outpath,imgname):
 
     real_rate = round(real_height/real_length, 2)
     print("real_rate:" + str(real_rate))
     brurred = cv.GaussianBlur(image, (5, 5), 0)
     gray = cv.cvtColor(brurred, cv.COLOR_BGR2GRAY)
-    #mimg = cv.adaptiveThreshold(gray, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY,15,10)
     thr, mimg = cv.threshold(gray, 160, 255, cv.THRESH_BINARY)
     kernel = np.ones((5,5),np.uint8)
     opening = cv.morphologyEx(mimg, cv.MORPH_OPEN, kernel) 
@@ -53,7 +54,7 @@ def edge_crop(image,real_height, real_length,outpath,imgname):
             epsilon = 0.1 * cv.arcLength(contour, True)
             approx = cv.approxPolyDP(contour, epsilon, True)
             #print(approx)
-            hull = cv.convexHull(approx)
+            hull = cv.convexHull(approx) #凸包的点
             #print(hull)
             # hull_img = cv.polylines(image, [hull], True, (0, 255, 0), 2) #绘制绿框
             # outhull = op.join(outpath, imgname+"_hull.jpg")
@@ -105,8 +106,9 @@ def edge_crop(image,real_height, real_length,outpath,imgname):
 
 
 
-def main(image_path, crop=False, height=21, length=29.7, reflections=False, outdir=None):
-    
+def main(args, crop=False, height=21, length=29.7, reflections=False, outdir=None):
+    image_path = args
+    print("----------")
     image = cv.imread(image_path)
     
     #if imgname is None:
@@ -129,9 +131,12 @@ def main(image_path, crop=False, height=21, length=29.7, reflections=False, outd
         tip = "_p"
 
     outname = op.join(outpath, name + tip + ".jpg")
-    print(outname)
     cv.imwrite(outname, image)
-    print("----------")
 
-# if __name__ == "__main__":
-#     main(sys.argv[1], True, True)
+
+#if __name__ == "main":
+#    if len(sys.argv) < 2:
+#        print('usage: python prepare.py <image_path>')
+#        sys.exit()
+        
+#    main(sys.argv[1:])

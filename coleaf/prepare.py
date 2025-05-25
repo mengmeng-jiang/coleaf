@@ -20,6 +20,8 @@ def remove_reflections(image):
 
 
 #crop the background
+#reference1:https://pyimagesearch.com/2014/08/25/4-point-opencv-getperspective-transform-example/
+#reference2:https://pyimagesearch.com/2014/09/01/build-kick-ass-mobile-document-scanner-just-5-minutes/
 def edge_crop(image,real_height, real_length,outpath,imgname):
 
     real_rate = round(real_height/real_length, 2)

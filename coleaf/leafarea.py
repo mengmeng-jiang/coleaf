@@ -25,14 +25,9 @@ def calc_photo(image):
     
     brurred = cv.GaussianBlur(image, (5, 5), 0)
     gray = cv.cvtColor(brurred, cv.COLOR_BGR2GRAY)
-    #gray = cv.equalizeHist(gray) #永久封存，这句会加大背景的各种小杂点，让亮度不平衡的问题更加严重
     edgo_output = cv.Canny(gray, 25, 150)
     kernel = np.ones((3, 3), np.uint8)
     closing =cv.morphologyEx(edgo_output, cv.MORPH_CLOSE, kernel)
-    # closing[0:int(0.01*height2),0:length2] = [0] #这里写的有问题emmm，会在靠近右边有一个直线应该，导致分割不完整
-    # closing[int(0.99*height2):height2,0:length2] = [0]
-    # closing[0:height2,0:int(0.01*length2)] = [0]
-    # closing[0:height2,int(0.99*height2):height2] = [0]
 
     return (closing)
 

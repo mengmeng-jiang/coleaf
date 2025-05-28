@@ -39,10 +39,6 @@ def calc_scanned(image):
     img_binary = pcv.threshold.binary(gray_img=lab, threshold=ret, max_value=255, object_type="light")
     kernel = np.ones((9, 9), np.uint8)
     closing = cv.morphologyEx(img_binary, cv.MORPH_CLOSE, kernel)
-    # closing[0:int(0.01*height2),0:length2] = [0]
-    # closing[int(0.99*height2):height2,0:length2] = [0]
-    # closing[0:height2,0:int(0.01*length2)] = [0]
-    # closing[0:height2,int(0.99*height2):height2] = [0]
     return(closing)
 
 
@@ -60,7 +56,7 @@ def measure_object(original_img, closing_img, background, name, outpath, output_
         if area >= round(0.005*height2*length2) and area < round(0.7*height2*length2):
             i+=1
             print(i)
-            realrate = (height2*length2)/background #一厘米是多少像素
+            realrate = (height2*length2)/background
             realarea = area/realrate
             leftmost = tuple(contour[contour[:,:,0].argmin()][0])
             rightmost = tuple(contour[contour[:,:,0].argmax()][0])

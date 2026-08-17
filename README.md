@@ -5,9 +5,9 @@ Email | mengmengjiang.1105@gmail.com
 
 ## Instruction
 coleaf is a tool to collect some traits of tea leaves. Such as the leaf area, leaf aspect ratio, leaf shape，trichome number.  
-to be continue (2022.3.22)  
+
 it is small and esay to install. you don't have to make a ruler to calculate leaf size. just a mobelphone, an A4 paper and a glass(need larger than paper), you can get the size of obgects in batches quickly.    
-to be continue(2022.4.25)  
+
  
 ## Dependenies
 - python==3.7 
@@ -53,9 +53,11 @@ coleaf leafarea ./test/leaf/photoOut/
 ```
 
 ## Reference
+Jiang, M., Chen, S., Kong, W. et al. Coleaf, an image recognition-driven approach facilitates the genome-wide association study with tea leaf morphology. Plant Methods 22, 42 (2026). https://doi.org/10.1186/s13007-026-01518-5
 
 ## Tips
 weahther the picture is vertical or horizontal, the crop( coleaf prepare -c ) option output picture will be horizontal. So that you don't need to rorate the picture. It means that length need larger than height, otherwise the picture will be deformed after processing.
+
 ### 
 when you use the  crop option, it would be better when the contracst between the backgroud color and the A4 paper color is large, such as the white paper with the black background, and make sure the there would be nothing blocks the edgea of the paper, such as the reflection of lamps on glass.  
 the output picture name would end with "_" + [c,p,o,r] +".jpg" to imply the previous opetion.   
